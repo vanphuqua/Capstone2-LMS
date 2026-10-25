@@ -46,7 +46,6 @@ async function main() {
     updated++;
   }
 
-  console.log(`Backfilled ${updated} purchase(s).`);
 }
 
 main()

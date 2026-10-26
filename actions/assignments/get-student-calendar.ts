@@ -66,3 +66,59 @@ export async function getStudentAssignmentCalendar() {
         dueDate: "asc",
       },
     });
+
+    // Get all submissions by the student
+    const submissions = await db.assignmentSubmission.findMany({
+      where: {
+        studentId: userId,
+        assignment: {
+          courseId: { in: allCourseIds },
+        },
+      },
+      include: {
+        assignment: {
+          include: {
+            course: {
+              select: {
+                id: true,
+                title: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return { success: true, assignments, submissions };
+  } catch (error) {
+    console.error("[GET_STUDENT_CALENDAR]", error);
+    return { error: "Failed to fetch assignment calendar" };
+  }
+}
+
+export async function getUpcomingAssignments(daysAhead: number = 7) {
+  try {
+    const session = await auth();
+    const userId = session?.user?.id;
+
+    if (!userId) {
+      return { error: "Unauthorized" };
+    }
+
+    // Get enrolled courses
+    const purchases = await db.purchase.findMany({
+      where: { userId },
+      select: { courseId: true },
+    });
+
+    const enrolledCourseIds = purchases.map((p) => p.courseId);
+
+    // Get free courses with progress
+    const freeCoursesWithProgress = await db.userProgress.findMany({
+      where: { userId },
+      select: { 
+        chapter: {
+          select: { courseId: true }
+        }
+      },
+    });

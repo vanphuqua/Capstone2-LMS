@@ -122,3 +122,52 @@ export async function getUpcomingAssignments(daysAhead: number = 7) {
         }
       },
     });
+    const freeEnrolledCourseIds = freeCoursesWithProgress.map((p) => p.chapter.courseId);
+    const allCourseIds = Array.from(new Set([...enrolledCourseIds, ...freeEnrolledCourseIds]));
+
+    if (allCourseIds.length === 0) {
+      return { success: true, assignments: [] };
+    }
+
+    const now = new Date();
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + daysAhead);
+
+    const assignments = await db.assignment.findMany({
+      where: {
+        courseId: { in: allCourseIds },
+        isPublished: true,
+        dueDate: {
+          gte: now,
+          lte: futureDate,
+        },
+      },
+      include: {
+        course: {
+          select: {
+            id: true,
+            title: true,
+            imageUrl: true,
+          },
+        },
+        chapter: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+        submissions: {
+          where: { studentId: userId },
+        },
+      },
+      orderBy: {
+        dueDate: "asc",
+      },
+    });
+
+    return { success: true, assignments };
+  } catch (error) {
+    console.error("[GET_UPCOMING_ASSIGNMENTS]", error);
+    return { error: "Failed to fetch upcoming assignments" };
+  }
+}

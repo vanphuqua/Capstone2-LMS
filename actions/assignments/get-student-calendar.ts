@@ -30,3 +30,39 @@ export async function getStudentAssignmentCalendar() {
         }
       },
     });
+
+     const freeEnrolledCourseIds = freeCoursesWithProgress.map((p) => p.chapter.courseId);
+    const allCourseIds = Array.from(new Set([...enrolledCourseIds, ...freeEnrolledCourseIds]));
+
+    if (allCourseIds.length === 0) {
+      return { success: true, assignments: [], submissions: [] };
+    }
+
+    // Get all published assignments for enrolled courses
+    const assignments = await db.assignment.findMany({
+      where: {
+        courseId: { in: allCourseIds },
+        isPublished: true,
+      },
+      include: {
+        course: {
+          select: {
+            id: true,
+            title: true,
+            imageUrl: true,
+          },
+        },
+        chapter: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+        submissions: {
+          where: { studentId: userId },
+        },
+      },
+      orderBy: {
+        dueDate: "asc",
+      },
+    });

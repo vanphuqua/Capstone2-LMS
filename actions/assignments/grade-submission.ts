@@ -106,3 +106,32 @@ export async function getSubmissionsForAssignment(assignmentId: string) {
       return { error: "Unauthorized" };
     }
     
+    // Get all submissions for this assignment
+    const submissions = await db.assignmentSubmission.findMany({
+      where: { assignmentId },
+      include: {
+        student: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        grader: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        submittedAt: "desc",
+      },
+    });
+
+    return { success: true, submissions, assignment };
+  } catch (error) {
+    console.error("[GET_SUBMISSIONS]", error);
+    return { error: "Failed to fetch submissions" };
+  }
+}

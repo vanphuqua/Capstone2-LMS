@@ -74,3 +74,64 @@ export async function submitAssignment(params: SubmitAssignmentParams) {
     if (params.submissionType === "text" && !assignment.allowTextSubmission) {
       return { error: "Text submissions not allowed for this assignment" };
     }
+// Check if submission already exists
+    const existingSubmission = await db.assignmentSubmission.findUnique({
+      where: {
+        assignmentId_studentId: {
+          assignmentId: params.assignmentId,
+          studentId: userId,
+        },
+      },
+    });
+
+    let submission;
+
+    if (existingSubmission) {
+      // Update existing submission
+      submission = await db.assignmentSubmission.update({
+        where: {
+          id: existingSubmission.id,
+        },
+        data: {
+          submissionType: params.submissionType,
+          fileUrl: params.fileUrl,
+          fileName: params.fileName,
+          fileSize: params.fileSize,
+          linkUrl: params.linkUrl,
+          textContent: params.textContent,
+          isLate,
+          daysLate,
+          submittedAt: new Date(),
+          status: "submitted",
+          // Reset grading if resubmitting
+          score: null,
+          feedback: null,
+          gradedAt: null,
+          gradedBy: null,
+        },
+      });
+    } else {
+      // Create new submission
+      submission = await db.assignmentSubmission.create({
+        data: {
+          assignmentId: params.assignmentId,
+          studentId: userId,
+          submissionType: params.submissionType,
+          fileUrl: params.fileUrl,
+          fileName: params.fileName,
+          fileSize: params.fileSize,
+          linkUrl: params.linkUrl,
+          textContent: params.textContent,
+          isLate,
+          daysLate,
+        },
+      });
+    }
+
+    revalidatePath(`/courses/${assignment.courseId}/assignments/${params.assignmentId}`);
+    return { success: true, submission };
+  } catch (error) {
+    console.error("[SUBMIT_ASSIGNMENT]", error);
+    return { error: "Failed to submit assignment" };
+  }
+}

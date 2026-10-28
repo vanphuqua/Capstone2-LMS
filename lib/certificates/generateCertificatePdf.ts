@@ -162,3 +162,8 @@ export async function generateCertificatePdf(
     thickness: 2,
     color: rgb(0.6, 0.5, 0.2),
   });
+  // Main certificate title - with wrapping for long titles
+  const title = certificateTitle.toUpperCase();
+  let titleSize = 28; // Reduced from 32 to fit better
+  const maxTitleWidth = width - 200; // Leave 100px padding on each side (increased from 60px)
+

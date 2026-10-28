@@ -118,4 +118,9 @@ export async function generateCertificatePdf(
     end: { x: 35 + cornerSize, y: height - 35 },
     thickness: 2,
     color: rgb(0.6, 0.5, 0.2),
+  });page.drawLine({
+    start: { x: 35, y: height - 35 },
+    end: { x: 35, y: height - 35 - cornerSize },
+    thickness: 2,
+    color: rgb(0.6, 0.5, 0.2),
   });

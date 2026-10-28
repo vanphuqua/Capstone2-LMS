@@ -68,3 +68,47 @@ export async function generateCertificatePdf(
     borderColor: rgb(0.5, 0.1, 0.1),
     borderWidth: 3,
   });
+  // Logo + organization name (Marwadi University style)
+  try {
+    const logoRelativePath =
+      process.env.CERTIFICATE_LOGO_PATH || "public/marwadi-university-logo.png";
+    const logoPath = path.join(process.cwd(), logoRelativePath);
+    const logoBytes = await fs.readFile(logoPath);
+    const logoBytesArray = new Uint8Array(
+      logoBytes.buffer,
+      logoBytes.byteOffset,
+      logoBytes.byteLength,
+    );
+
+    const isPng = logoRelativePath.toLowerCase().endsWith(".png");
+    const logoImage = isPng
+      ? await pdfDoc.embedPng(logoBytesArray)
+      : await pdfDoc.embedJpg(logoBytesArray);
+
+    const desiredWidth = 120;
+    const scale = desiredWidth / logoImage.width;
+    const logoHeight = logoImage.height * scale;
+
+    const logoX = width / 2 - desiredWidth / 2;
+    const logoY = height - 110;
+
+    page.drawImage(logoImage, {
+      x: logoX,
+      y: logoY,
+      width: desiredWidth,
+      height: logoHeight,
+    });
+
+    const orgName = process.env.CERTIFICATE_ORG_NAME || "Marwadi University";
+    const orgFontSize = 16;
+    const orgWidth = boldFont.widthOfTextAtSize(orgName, orgFontSize);
+    page.drawText(orgName, {
+      x: (width - orgWidth) / 2,
+      y: logoY - 18,
+      size: orgFontSize,
+      font: boldFont,
+      color: rgb(0.15, 0.15, 0.25),
+    });
+  } catch {
+    // If logo file or env is missing, continue without breaking certificate
+  }

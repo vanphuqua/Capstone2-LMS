@@ -111,8 +111,7 @@ export async function generateCertificatePdf(
     });
   } catch {
     // If logo file or env is missing, continue without breaking certificate
-  }
-  // Corner decorations
+  }// Corner decorations
   const cornerSize = 30;
   page.drawLine({
     start: { x: 35, y: height - 35 },
@@ -120,50 +119,3 @@ export async function generateCertificatePdf(
     thickness: 2,
     color: rgb(0.6, 0.5, 0.2),
   });
-  page.drawLine({
-    start: { x: 35, y: height - 35 },
-    end: { x: 35, y: height - 35 - cornerSize },
-    thickness: 2,
-    color: rgb(0.6, 0.5, 0.2),
-  });
-  page.drawLine({
-    start: { x: width - 35 - cornerSize, y: height - 35 },
-    end: { x: width - 35, y: height - 35 },
-    thickness: 2,
-    color: rgb(0.6, 0.5, 0.2),
-  });
-  page.drawLine({
-    start: { x: width - 35, y: height - 35 },
-    end: { x: width - 35, y: height - 35 - cornerSize },
-    thickness: 2,
-    color: rgb(0.6, 0.5, 0.2),
-  });
-  page.drawLine({
-    start: { x: 35, y: 35 },
-    end: { x: 35 + cornerSize, y: 35 },
-    thickness: 2,
-    color: rgb(0.6, 0.5, 0.2),
-  });
-  page.drawLine({
-    start: { x: 35, y: 35 },
-    end: { x: 35, y: 35 + cornerSize },
-    thickness: 2,
-    color: rgb(0.6, 0.5, 0.2),
-  });
-  page.drawLine({
-    start: { x: width - 35 - cornerSize, y: 35 },
-    end: { x: width - 35, y: 35 },
-    thickness: 2,
-    color: rgb(0.6, 0.5, 0.2),
-  });
-  page.drawLine({
-    start: { x: width - 35, y: 35 },
-    end: { x: width - 35, y: 35 + cornerSize },
-    thickness: 2,
-    color: rgb(0.6, 0.5, 0.2),
-  });
-  // Main certificate title - with wrapping for long titles
-  const title = certificateTitle.toUpperCase();
-  let titleSize = 28; // Reduced from 32 to fit better
-  const maxTitleWidth = width - 200; // Leave 100px padding on each side (increased from 60px)
-

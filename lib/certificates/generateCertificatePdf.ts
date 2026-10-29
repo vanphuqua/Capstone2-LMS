@@ -346,3 +346,39 @@ export async function generateCertificatePdf(
     font: boldFont,
     color: rgb(0.2, 0.2, 0.2),
   });
+
+  // Score and requirements
+  const scoreText = `Score: ${scorePercent}% (Minimum Required: ${minPercentage}%)`;
+  const scoreWidth = regularFont.widthOfTextAtSize(scoreText, 11);
+  page.drawText(scoreText, {
+    x: (width - scoreWidth) / 2,
+    y: courseY - 45,
+    size: 11,
+    font: regularFont,
+    color: rgb(0.1, 0.5, 0.2),
+  });
+
+  // Completion date
+  const dateFormatted = issueDate.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const dateLabel = "Date of Completion: ";
+  const dateLabelWidth = regularFont.widthOfTextAtSize(dateLabel, 11);
+  const dateValueWidth = boldFont.widthOfTextAtSize(dateFormatted, 11);
+  const totalDateWidth = dateLabelWidth + dateValueWidth;
+  page.drawText(dateLabel, {
+    x: (width - totalDateWidth) / 2,
+    y: courseY - 65,
+    size: 11,
+    font: regularFont,
+    color: rgb(0.4, 0.4, 0.4),
+  });
+  page.drawText(dateFormatted, {
+    x: (width - totalDateWidth) / 2 + dateLabelWidth,
+    y: courseY - 65,
+    size: 11,
+    font: boldFont,
+    color: rgb(0.2, 0.2, 0.2),
+  });

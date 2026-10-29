@@ -253,3 +253,96 @@ export async function generateCertificatePdf(
      font: italicFont,
      color: rgb(0.4, 0.4, 0.4),
    });
+
+  // Student name
+  const trimmedStudentName = String(studentName).substring(0, 60);
+  const nameSize = 28;
+  const nameWidth = boldFont.widthOfTextAtSize(trimmedStudentName, nameSize);
+  const nameY = certifyY - 35;
+  page.drawText(trimmedStudentName, {
+    x: (width - nameWidth) / 2,
+    y: nameY,
+    size: nameSize,
+    font: boldFont,
+    color: rgb(0.1, 0.1, 0.1),
+  });
+
+  // Underline for student name
+  page.drawLine({
+    start: { x: width / 2 - 120, y: nameY - 7 },
+    end: { x: width / 2 + 120, y: nameY - 7 },
+    thickness: 1,
+    color: rgb(0.3, 0.3, 0.3),
+  });
+
+  // Completion phrase
+  const completedText = "has successfully completed the course";
+  const completedWidth = italicFont.widthOfTextAtSize(completedText, 14);
+  const completedY = nameY - 40;
+  page.drawText(completedText, {
+    x: (width - completedWidth) / 2,
+    y: completedY,
+    size: 14,
+    font: italicFont,
+    color: rgb(0.4, 0.4, 0.4),
+  });
+
+  // Course title with wrapping
+  const courseSize = 22;
+  const maxCourseWidth = width - 160;
+
+  const wrapText = (text: string, maxWidth: number): string[] => {
+    const words = text.split(" ");
+    const lines: string[] = [];
+    let current = "";
+
+    for (const word of words) {
+      const test = current ? `${current} ${word}` : word;
+      const w = boldFont.widthOfTextAtSize(test, courseSize);
+      if (w > maxCourseWidth && current) {
+        lines.push(current);
+        current = word;
+      } else {
+        current = test;
+      }
+    }
+    if (current) lines.push(current);
+    return lines;
+  };
+
+  const courseLines = wrapText(courseTitle, maxCourseWidth);
+  let courseY = completedY - 30;
+  for (const line of courseLines) {
+    const lineWidth = boldFont.widthOfTextAtSize(line, courseSize);
+    page.drawText(line, {
+      x: (width - lineWidth) / 2,
+      y: courseY,
+      size: courseSize,
+      font: boldFont,
+      color: rgb(0.15, 0.3, 0.5),
+    });
+    courseY -= courseSize + 4;
+  }
+
+  // Instructor line
+  const instructorLabel = "Instructor: ";
+  const instructorLabelWidth = regularFont.widthOfTextAtSize(
+    instructorLabel,
+    12,
+  );
+  const instructorNameWidth = boldFont.widthOfTextAtSize(teacherName, 12);
+  const totalInstructorWidth = instructorLabelWidth + instructorNameWidth;
+  page.drawText(instructorLabel, {
+    x: (width - totalInstructorWidth) / 2,
+    y: courseY - 25,
+    size: 12,
+    font: regularFont,
+    color: rgb(0.4, 0.4, 0.4),
+  });
+  page.drawText(teacherName, {
+    x: (width - totalInstructorWidth) / 2 + instructorLabelWidth,
+    y: courseY - 25,
+    size: 12,
+    font: boldFont,
+    color: rgb(0.2, 0.2, 0.2),
+  });

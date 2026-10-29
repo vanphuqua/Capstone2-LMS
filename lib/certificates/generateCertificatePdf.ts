@@ -164,3 +164,47 @@ export async function generateCertificatePdf(
     thickness: 2,
     color: rgb(0.6, 0.5, 0.2),
   });
+
+  // Main certificate title - with wrapping for long titles
+  const title = certificateTitle.toUpperCase();
+  let titleSize = 28; // Reduced from 32 to fit better
+  const maxTitleWidth = width - 200; // Leave 100px padding on each side (increased from 60px)
+
+  // Function to wrap title text, handling long words
+  const wrapTitle = (
+    text: string,
+    maxWidth: number,
+    font: typeof boldFont,
+    fontSize: number,
+  ): string[] => {
+    const words = text.split(" ");
+    const lines: string[] = [];
+    let currentLine = "";
+
+    for (let word of words) {
+      // If a single word is too long, truncate it with ellipsis
+      let wordWidth = font.widthOfTextAtSize(word, fontSize);
+      if (wordWidth > maxWidth) {
+        // Truncate long words
+        while (wordWidth > maxWidth - 50 && word.length > 8) {
+          word = word.substring(0, word.length - 1);
+          wordWidth = font.widthOfTextAtSize(word + "...", fontSize);
+        }
+        word = word + "...";
+      }
+
+      const testLine = currentLine ? `${currentLine} ${word}` : word;
+      const testWidth = font.widthOfTextAtSize(testLine, fontSize);
+
+      if (testWidth > maxWidth && currentLine) {
+        lines.push(currentLine);
+        currentLine = word;
+      } else {
+        currentLine = testLine;
+      }
+    }
+    if (currentLine) {
+      lines.push(currentLine);
+    }
+    return lines;
+  };

@@ -68,6 +68,7 @@ export async function generateCertificatePdf(
     borderColor: rgb(0.5, 0.1, 0.1),
     borderWidth: 3,
   });
+
   // Logo + organization name (Marwadi University style)
   try {
     const logoRelativePath =
@@ -111,16 +112,55 @@ export async function generateCertificatePdf(
     });
   } catch {
     // If logo file or env is missing, continue without breaking certificate
-  }// Corner decorations
+  }
+
+  // Corner decorations
   const cornerSize = 30;
   page.drawLine({
     start: { x: 35, y: height - 35 },
     end: { x: 35 + cornerSize, y: height - 35 },
     thickness: 2,
     color: rgb(0.6, 0.5, 0.2),
-  });page.drawLine({
+  });
+  page.drawLine({
     start: { x: 35, y: height - 35 },
     end: { x: 35, y: height - 35 - cornerSize },
+    thickness: 2,
+    color: rgb(0.6, 0.5, 0.2),
+  });
+  page.drawLine({
+    start: { x: width - 35 - cornerSize, y: height - 35 },
+    end: { x: width - 35, y: height - 35 },
+    thickness: 2,
+    color: rgb(0.6, 0.5, 0.2),
+  });
+  page.drawLine({
+    start: { x: width - 35, y: height - 35 },
+    end: { x: width - 35, y: height - 35 - cornerSize },
+    thickness: 2,
+    color: rgb(0.6, 0.5, 0.2),
+  });
+  page.drawLine({
+    start: { x: 35, y: 35 },
+    end: { x: 35 + cornerSize, y: 35 },
+    thickness: 2,
+    color: rgb(0.6, 0.5, 0.2),
+  });
+  page.drawLine({
+    start: { x: 35, y: 35 },
+    end: { x: 35, y: 35 + cornerSize },
+    thickness: 2,
+    color: rgb(0.6, 0.5, 0.2),
+  });
+  page.drawLine({
+    start: { x: width - 35 - cornerSize, y: 35 },
+    end: { x: width - 35, y: 35 },
+    thickness: 2,
+    color: rgb(0.6, 0.5, 0.2),
+  });
+  page.drawLine({
+    start: { x: width - 35, y: 35 },
+    end: { x: width - 35, y: 35 + cornerSize },
     thickness: 2,
     color: rgb(0.6, 0.5, 0.2),
   });

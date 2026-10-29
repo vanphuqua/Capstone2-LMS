@@ -208,3 +208,48 @@ export async function generateCertificatePdf(
     }
     return lines;
   };
+  
+   // Check if title is very long and reduce font size if needed
+   const titleWidth = boldFont.widthOfTextAtSize(title, titleSize);
+   if (titleWidth > maxTitleWidth * 1.5) {
+     titleSize = 22; // Reduce font size more aggressively for very long titles
+   }
+ 
+   const titleLines = wrapTitle(title, maxTitleWidth, boldFont, titleSize);
+   let titleY = height - 155;
+   const titleLineHeight = titleSize + 8;
+ 
+   // Draw each line of the title
+   for (const line of titleLines) {
+     const lineWidth = boldFont.widthOfTextAtSize(line, titleSize);
+     page.drawText(line, {
+       x: (width - lineWidth) / 2,
+       y: titleY,
+       size: titleSize,
+       font: boldFont,
+       color: rgb(0.15, 0.3, 0.5),
+     });
+     titleY -= titleLineHeight;
+   }
+ 
+   // Adjust for multi-line title offset
+   const titleOffset = (titleLines.length - 1) * titleLineHeight;
+ 
+   page.drawLine({
+     start: { x: width / 2 - 150, y: titleY + titleLineHeight - 15 },
+     end: { x: width / 2 + 150, y: titleY + titleLineHeight - 15 },
+     thickness: 1.5,
+     color: rgb(0.6, 0.5, 0.2),
+   });
+ 
+   // "This is to certify that"
+   const certifyText = "This is to certify that";
+   const certifyWidth = italicFont.widthOfTextAtSize(certifyText, 14);
+   const certifyY = height - 155 - titleOffset - 55;
+   page.drawText(certifyText, {
+     x: (width - certifyWidth) / 2,
+     y: certifyY,
+     size: 14,
+     font: italicFont,
+     color: rgb(0.4, 0.4, 0.4),
+   });

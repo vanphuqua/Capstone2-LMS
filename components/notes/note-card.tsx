@@ -71,3 +71,79 @@ export const NoteCard = ({
       setIsDeleting(false);
     }
   };
+  return (
+    <Card className="group hover:shadow-md transition-shadow">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="space-y-1 flex-1">
+            {chapterTitle && (
+              <CardDescription className="text-xs">
+                {chapterTitle}
+              </CardDescription>
+            )}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Clock className="h-3 w-3" />
+              <span>{formatDistanceToNow(new Date(createdAt), { addSuffix: true })}</span>
+              {timestamp !== undefined && (
+                <>
+                  <span>•</span>
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="h-auto p-0 text-xs text-blue-600 hover:text-blue-800"
+                    onClick={() => onSeekTo?.(timestamp)}
+                  >
+                    <Play className="h-3 w-3 mr-1" />
+                    {formatTime(timestamp)}
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onEdit}
+              className="h-8 w-8 p-0"
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>{t("delete_dialog_title")}</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {t("delete_dialog_desc")}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {isDeleting ? t("deleting") : t("delete")}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm whitespace-pre-wrap">{content}</p>
+      </CardContent>
+    </Card>
+  );
+};

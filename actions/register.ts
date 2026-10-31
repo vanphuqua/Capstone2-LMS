@@ -49,3 +49,27 @@ export const register = async (
     }
     return { error: "Something went wrong. Please try again." };
   }
+
+  // If teacher, also add to Teacher table
+  if (userType === "TEACHER") {
+    await db.teacher.create({
+      data: {
+        email,
+      },
+    });
+  }
+
+  // Emit welcome event for new user
+  const newUser = await getUserByEmail(email);
+  if (newUser) {
+    eventBus.emit(EventName.USER_WELCOME, {
+      userId: newUser.id,
+      userName: name,
+      email,
+      timestamp: new Date(),
+      triggeredBy: newUser.id,
+    });
+  }
+
+  return { success: "Account created successfully!" };
+};

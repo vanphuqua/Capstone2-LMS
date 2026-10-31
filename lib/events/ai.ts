@@ -158,3 +158,11 @@ class ProviderHttpError extends Error {
     this.retryAfterMs = retryAfterMs;
   }
 }
+// 429 = rate limit, 5xx = provider overloaded — all worth one quick retry
+const RETRYABLE_STATUS = new Set([429, 500, 502, 503, 504]);
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const getProviderRetries = (): number => {
+  const raw = parseInt(process.env.AI_PROVIDER_RETRIES || "", 10);
+  return Number.isFinite(raw) ? Math.min(Math.max(raw, 0), 3) : 1;
+};

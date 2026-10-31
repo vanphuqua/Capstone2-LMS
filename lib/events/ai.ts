@@ -115,3 +115,46 @@ const getProviders = (): ProviderConfig[] => {
     return providers;
   };
   
+
+  /** Cheap check for feature routes: is at least one provider configured? */
+export const isAIConfigured = (): boolean => getProviders().length > 0;
+
+/** Provider status for the admin health endpoint */
+export const getAIStatus = () => {
+  const providers = getProviders();
+  return {
+    gemini: {
+      configured: providers.some((p) => p.name === "gemini"),
+      model: process.env.AI_GEMINI_MODEL || "gemini-2.5-flash",
+    },
+    cline: {
+      configured: providers.some((p) => p.name === "cline"),
+      model: process.env.AI_CLINE_MODEL || "z-ai/glm-5.3-flash",
+    },
+  };
+};
+
+interface ChatCompletionResponse {
+  choices?: Array<{
+    message?: { content?: string | null };
+    finish_reason?: string | null;
+  }>;
+  usage?: {
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    total_tokens?: number;
+  };
+}
+
+/** HTTP error carrying the status so transient failures can be retried */
+class ProviderHttpError extends Error {
+  readonly status: number;
+  readonly retryAfterMs?: number;
+
+  constructor(message: string, status: number, retryAfterMs?: number) {
+    super(message);
+    this.name = "ProviderHttpError";
+    this.status = status;
+    this.retryAfterMs = retryAfterMs;
+  }
+}

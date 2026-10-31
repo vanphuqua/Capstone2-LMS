@@ -76,3 +76,42 @@ const getTimeoutMs = (): number => {
   const raw = parseInt(process.env.AI_TIMEOUT_MS || "", 10);
   return Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_TIMEOUT_MS;
 };
+
+/**
+ * Resolve provider configs from env. Providers without an API key are
+ * skipped (a missing primary simply promotes the fallback).
+ */
+const getProviders = (): ProviderConfig[] => {
+    const providers: ProviderConfig[] = [];
+  
+    const geminiKey = process.env.GEMINI_API_KEY;
+    if (geminiKey) {
+      providers.push({
+        name: "gemini",
+        // Google exposes an OpenAI-compatible endpoint on the Generative Language API
+        // No trailing slash — fetch() appends "/chat/completions"
+        // (a double slash here causes 404 from Google)
+        baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai",
+        apiKey: geminiKey,
+        // NOTE: gemini-2.0-flash was retired by Google (404 as of Oct 2026).
+        // gemini-2.5-flash verified working live; override via AI_GEMINI_MODEL
+        // (e.g. "gemini-3.8-flash" — Google's current recommendation).
+        defaultModel: process.env.AI_GEMINI_MODEL || "gemini-2.5-flash",
+      });
+    }
+  
+    const clineKey = process.env.CLINE_API_KEY;
+    if (clineKey) {
+      providers.push({
+        name: "cline",
+        baseUrl: "https://api.cline.bot/api/v1",
+        apiKey: clineKey,
+        // z-ai/glm-5.3-flash: fastest + cheapest model tested on the Cline API
+        // (~$0.00005/call). Free alternatives: minimax/minimax-m3.1-flash:free
+        defaultModel: process.env.AI_CLINE_MODEL || "minimax/minimax-m2.5",
+      });
+    }
+  
+    return providers;
+  };
+  

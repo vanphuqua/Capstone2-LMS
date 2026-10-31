@@ -382,3 +382,64 @@ export async function generateCertificatePdf(
     font: boldFont,
     color: rgb(0.2, 0.2, 0.2),
   });
+  
+  // Signature section
+  const sigLineY = 95;
+  page.drawLine({
+    start: { x: width / 2 - 100, y: sigLineY },
+    end: { x: width / 2 + 100, y: sigLineY },
+    thickness: 1,
+    color: rgb(0.3, 0.3, 0.3),
+  });
+
+  const signatureName = teacherName;
+  const sigNameWidth = boldFont.widthOfTextAtSize(signatureName, 14);
+  page.drawText(signatureName, {
+    x: (width - sigNameWidth) / 2,
+    y: sigLineY + 15,
+    size: 14,
+    font: boldFont,
+    color: rgb(0.15, 0.15, 0.15),
+  });
+
+  const sigTitleToUse = signatureTitle || "Course Instructor";
+  const sigTitleWidth = regularFont.widthOfTextAtSize(sigTitleToUse, 11);
+  page.drawText(sigTitleToUse, {
+    x: (width - sigTitleWidth) / 2,
+    y: sigLineY - 18,
+    size: 11,
+    font: regularFont,
+    color: rgb(0.4, 0.4, 0.4),
+  });
+
+  // Optional organization name under signature (used by sample preview)
+  if (organizationNameUnderSignature && organizationNameUnderSignature.trim()) {
+    const orgWidth = italicFont.widthOfTextAtSize(
+      organizationNameUnderSignature,
+      10,
+    );
+    page.drawText(organizationNameUnderSignature, {
+      x: (width - orgWidth) / 2,
+      y: sigLineY - 35,
+      size: 10,
+      font: italicFont,
+      color: rgb(0.5, 0.5, 0.5),
+    });
+  }
+
+    // Verification code at bottom
+    if (verificationCode) {
+      const verifyText = `Verification: ${verificationCode}`;
+      const verifyWidth = regularFont.widthOfTextAtSize(verifyText, 8);
+      page.drawText(verifyText, {
+        x: (width - verifyWidth) / 2,
+        y: 40,
+        size: 8,
+        font: regularFont,
+        color: rgb(0.6, 0.6, 0.6),
+      });
+    }
+  
+    const pdfBytes = await pdfDoc.save();
+    return pdfBytes;
+  }

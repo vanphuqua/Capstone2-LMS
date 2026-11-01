@@ -308,3 +308,128 @@ export const chatCompletion = async (
     attempts,
   );
 };
+
+/** Strip markdown fences models sometimes wrap around JSON */
+const extractJSON = (text: string): string => {
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fenced) return fenced[1].trim();
+  const start = text.indexOf("{");
+  const startArr = text.indexOf("[");
+  const first =
+    start === -1 ? startArr : startArr === -1 ? start : Math.min(start, startArr);
+  if (first === -1) return text.trim();
+  const last = Math.max(text.lastIndexOf("}"), text.lastIndexOf("]"));
+  return last > first ? text.slice(first, last + 1) : text.trim();
+};
+
+export interface GenerateJSONResult<T> {
+  data: T;
+  result: AIResult;
+}
+
+/**
+ * Generate a value matching a Zod schema. Sends a JSON-only instruction,
+ * validates the reply, and makes ONE repair attempt on invalid JSON.
+ */
+export const generateJSON = async <T>(
+  schema: z.ZodType<T>,
+  messages: ChatMessage[],
+  options: ChatCompletionOptions = {},
+): Promise<GenerateJSONResult<T>> => {
+  const instruction: ChatMessage = {
+    role: "system",
+    content:
+      "You must respond with a single valid JSON value only. " +
+      "No markdown, no code fences, no commentary before or after the JSON.",
+  };
+
+  let attemptMessages: ChatMessage[] = [instruction, ...messages];
+  let lastResult: AIResult | undefined;
+  let lastError = "";
+
+  for (let i = 0; i < 2; i++) {
+    const result = await chatCompletion(attemptMessages, options);
+    lastResult = result;
+
+    try {
+      const parsed: unknown = JSON.parse(extractJSON(result.content));
+      const validated = schema.safeParse(parsed);
+      if (validated.success) {
+        return { data: validated.data, result };
+      }
+      lastError = validated.error.issues
+        .slice(0, 5)
+        .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+        .join("; ");
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : String(error);
+    }
+
+    // Repair attempt: send the invalid reply back and ask for a corrected JSON
+    attemptMessages = [
+      ...attemptMessages,
+      { role: "assistant", content: result.content },
+      {
+        role: "user",
+        content:
+          `Your previous response could not be used (${lastError}). ` +
+          "Reply again with the corrected, valid JSON value only.",
+      },
+    ];
+  }
+
+  throw new AIError(
+    `AI returned invalid JSON after retry: ${lastError}`,
+    lastResult ? [{ provider: lastResult.provider, error: lastError }] : [],
+  );
+};
+
+export interface AIStreamResult {
+  /** Plain-text delta stream the client can pipe directly to the UI */
+  stream: ReadableStream<Uint8Array>;
+  provider: AIProvider;
+  model: string;
+}
+
+/**
+ * Streaming variant of chatCompletion. Both providers speak OpenAI SSE, so
+ * upstream deltas are decoded once and re-emitted as plain text chunks.
+ * Provider fallback only applies until the first token is sent — after that
+ * a mid-stream error simply ends the stream.
+ */
+export const chatCompletionStream = async (
+  messages: ChatMessage[],
+  options: ChatCompletionOptions = {},
+): Promise<AIStreamResult> => {
+  const providers = getProviders();
+  if (providers.length === 0) {
+    throw new AIError(
+      "No AI provider configured. Set GEMINI_API_KEY and/or CLINE_API_KEY.",
+      [],
+    );
+  }
+
+  const attempts: Array<{ provider: AIProvider; error: string }> = [];
+
+  for (const provider of providers) {
+    const model = options.model || provider.defaultModel;
+    const controller = new AbortController();
+    // Streams may run long; default to 60s unless overridden
+    const timeoutMs = options.timeoutMs || Math.max(getTimeoutMs(), 60_000);
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const body: Record<string, unknown> = { model, messages, stream: true };
+      if (options.temperature !== undefined) {
+        body.temperature = options.temperature;
+      }
+
+      const res = await fetch(`${provider.baseUrl}/chat/completions`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${provider.apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });

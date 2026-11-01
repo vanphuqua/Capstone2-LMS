@@ -377,3 +377,59 @@ export const generateJSON = async <T>(
       },
     ];
   }
+
+  throw new AIError(
+    `AI returned invalid JSON after retry: ${lastError}`,
+    lastResult ? [{ provider: lastResult.provider, error: lastError }] : [],
+  );
+};
+
+export interface AIStreamResult {
+  /** Plain-text delta stream the client can pipe directly to the UI */
+  stream: ReadableStream<Uint8Array>;
+  provider: AIProvider;
+  model: string;
+}
+
+/**
+ * Streaming variant of chatCompletion. Both providers speak OpenAI SSE, so
+ * upstream deltas are decoded once and re-emitted as plain text chunks.
+ * Provider fallback only applies until the first token is sent — after that
+ * a mid-stream error simply ends the stream.
+ */
+export const chatCompletionStream = async (
+  messages: ChatMessage[],
+  options: ChatCompletionOptions = {},
+): Promise<AIStreamResult> => {
+  const providers = getProviders();
+  if (providers.length === 0) {
+    throw new AIError(
+      "No AI provider configured. Set GEMINI_API_KEY and/or CLINE_API_KEY.",
+      [],
+    );
+  }
+
+  const attempts: Array<{ provider: AIProvider; error: string }> = [];
+
+  for (const provider of providers) {
+    const model = options.model || provider.defaultModel;
+    const controller = new AbortController();
+    // Streams may run long; default to 60s unless overridden
+    const timeoutMs = options.timeoutMs || Math.max(getTimeoutMs(), 60_000);
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const body: Record<string, unknown> = { model, messages, stream: true };
+      if (options.temperature !== undefined) {
+        body.temperature = options.temperature;
+      }
+
+      const res = await fetch(`${provider.baseUrl}/chat/completions`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${provider.apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });

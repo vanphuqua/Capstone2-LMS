@@ -101,3 +101,74 @@ export const NotesList = ({
       toast.error(t("delete_failed"));
     }
   };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center text-gray-500">{t("loading")}</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (notes.length === 0) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center text-gray-500">
+            {isTeacher ? t("no_teacher") : t("no_student")}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {notes.map((note) => (
+        <Card key={note.id}>
+          <CardHeader>
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-blue-500" />
+                  <CardTitle className="text-lg">{note.title}</CardTitle>
+                </div>
+                {note.description && (
+                  <CardDescription className="mt-2">
+                    {note.description}
+                  </CardDescription>
+                )}
+                <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
+                  <span>{t("by")} {note.teacher.name}</span>
+                  <Badge variant="secondary">{note.downloads} {t("downloads")}</Badge>
+                  <span>{new Date(note.createdAt).toLocaleDateString()}</span>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() =>
+                    handleDownload(note.id, note.fileUrl, note.fileName)
+                  }
+                  size="sm"
+                  variant="outline"
+                >
+                  <Download className="h-4 w-4 mr-2" />{t("download")}</Button>
+                {isTeacher && (
+                  <Button
+                    onClick={() => handleDelete(note.id)}
+                    size="sm"
+                    variant="destructive"
+                  >
+                    <Trash className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          </CardHeader>
+        </Card>
+      ))}
+    </div>
+  );
+};

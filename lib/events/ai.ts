@@ -246,3 +246,25 @@ const callProvider = async (
       clearTimeout(timer);
     }
   };
+
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await runOnce();
+    } catch (error) {
+      lastError = error;
+      const retryable =
+        error instanceof ProviderHttpError &&
+        RETRYABLE_STATUS.has(error.status);
+      if (!retryable || attempt >= maxRetries) break;
+
+      const delay = error.retryAfterMs ?? 1_200;
+      console.warn(
+        `[AI] ${provider.name} ${error.status} (provider overloaded — transient) — retry ${attempt + 1}/${maxRetries} in ${delay}ms`,
+      );
+      await sleep(delay);
+    }
+  }
+
+  throw lastError;
+};

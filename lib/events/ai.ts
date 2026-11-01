@@ -166,3 +166,83 @@ const getProviderRetries = (): number => {
   const raw = parseInt(process.env.AI_PROVIDER_RETRIES || "", 10);
   return Number.isFinite(raw) ? Math.min(Math.max(raw, 0), 3) : 1;
 };
+
+const callProvider = async (
+  provider: ProviderConfig,
+  messages: ChatMessage[],
+  options: ChatCompletionOptions,
+): Promise<AIResult> => {
+  const model = options.model || provider.defaultModel;
+  const timeoutMs = options.timeoutMs || getTimeoutMs();
+  const startedAt = Date.now();
+  const maxRetries = getProviderRetries();
+
+  const runOnce = async (): Promise<AIResult> => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const body: Record<string, unknown> = { model, messages };
+      if (options.temperature !== undefined) body.temperature = options.temperature;
+      if (options.maxTokens !== undefined) body.max_tokens = options.maxTokens;
+
+      const res = await fetch(`${provider.baseUrl}/chat/completions`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${provider.apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+
+      if (!res.ok) {
+        const detail = await res.text().catch(() => "");
+        // Retry-After is in seconds; cap it so a request never stalls too long
+        const retryAfter = res.headers.get("retry-after");
+        const parsedRetryAfter = retryAfter
+          ? Math.min(parseInt(retryAfter, 10) * 1000, 3_000)
+          : NaN;
+        throw new ProviderHttpError(
+          `HTTP ${res.status}${detail ? `: ${detail.slice(0, 300)}` : ""}`,
+          res.status,
+          Number.isFinite(parsedRetryAfter) ? parsedRetryAfter : undefined,
+        );
+      }
+
+      const raw = (await res.json()) as ChatCompletionResponse & {
+        data?: ChatCompletionResponse;
+      };
+      // Cline wraps the OpenAI payload in { data: {...} }; Gemini returns it flat
+      const data = raw.data && raw.data.choices ? raw.data : raw;
+      const choice = data.choices?.[0];
+      const content = choice?.message?.content;
+
+      // Surface finish_reason + a body snippet so empty replies are debuggable
+      if (!content || !content.trim()) {
+        const snippet = JSON.stringify(raw).slice(0, 300);
+        throw new Error(
+          `Empty content in response (finish_reason=${choice?.finish_reason ?? "n/a"}, body=${snippet})`,
+        );
+      }
+
+      const usage: AIUsage | undefined = data.usage
+        ? {
+            promptTokens: data.usage.prompt_tokens ?? 0,
+            completionTokens: data.usage.completion_tokens ?? 0,
+            totalTokens: data.usage.total_tokens ?? 0,
+          }
+        : undefined;
+
+      return {
+        content,
+        provider: provider.name,
+        model,
+        fallbackUsed: provider.name !== "gemini",
+        latencyMs: Date.now() - startedAt,
+        usage,
+      };
+    } finally {
+      clearTimeout(timer);
+    }
+  };

@@ -268,3 +268,43 @@ const callProvider = async (
 
   throw lastError;
 };
+
+/**
+ * Chat completion with automatic Gemini → Cline fallback.
+ * Throws AIError when no provider could answer.
+ */
+export const chatCompletion = async (
+  messages: ChatMessage[],
+  options: ChatCompletionOptions = {},
+): Promise<AIResult> => {
+  const providers = getProviders();
+  if (providers.length === 0) {
+    throw new AIError(
+      "No AI provider configured. Set GEMINI_API_KEY and/or CLINE_API_KEY.",
+      [],
+    );
+  }
+
+  const attempts: Array<{ provider: AIProvider; error: string }> = [];
+
+  for (const provider of providers) {
+    try {
+      const result = await callProvider(provider, messages, options);
+      if (attempts.length > 0) {
+        console.warn(
+          `[AI] Fallback used: ${result.provider}/${result.model} answered after ${attempts.map((a) => a.provider).join(", ")} failed`,
+        );
+      }
+      return result;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      attempts.push({ provider: provider.name, error: message });
+      console.warn(`[AI] ${provider.name} failed: ${message}`);
+    }
+  }
+
+  throw new AIError(
+    `All AI providers failed (${attempts.map((a) => a.provider).join(", ")}).`,
+    attempts,
+  );
+};

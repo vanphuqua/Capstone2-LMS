@@ -129,3 +129,42 @@
     "published": "Published",
     "unpublished": "Unpublished"
   },
+  "settings_page": {
+    "title": "Admin Account Settings",
+    "desc": "Manage your admin password and security options."
+  },
+  "payouts_page": {
+    "title": "Teacher payout requests",
+    "desc": "Review and process teacher payouts (revenue after the platform fee).",
+    "col_teacher": "Teacher",
+    "col_amount": "Amount",
+    "col_status": "Status",
+    "col_requested_at": "Requested at",
+    "col_processed_at": "Processed at",
+    "col_bank": "Bank account",
+    "col_note": "Note",
+    "col_actions": "Actions",
+    "approve": "Approve",
+    "mark_paid": "Mark as paid",
+    "reject": "Reject",
+    "approve_toast": "Payout request approved",
+    "paid_toast": "Payout marked as paid",
+    "reject_toast": "Payout request rejected",
+    "process_failed": "Failed to process request",
+    "reject_dialog_title": "Reject payout request",
+    "reject_dialog_desc": "Add a rejection reason for the teacher.",
+    "note_placeholder": "Note for the teacher (optional)...",
+    "cancel": "Cancel",
+    "confirm_reject": "Confirm reject",
+    "filter_all": "All",
+    "filter_pending": "Pending",
+    "filter_approved": "Approved",
+    "filter_paid": "Paid",
+    "filter_rejected": "Rejected",
+    "status_pending": "Pending",
+    "status_approved": "Approved",
+    "status_rejected": "Rejected",
+    "status_paid": "Paid",
+    "no_payouts": "No payout requests"
+  }
+}

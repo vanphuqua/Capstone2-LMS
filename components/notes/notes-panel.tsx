@@ -186,3 +186,87 @@ export const NotesPanel = ({
       setIsExporting(false);
     }
   };
+  return (
+    <div className="space-y-4 h-full flex flex-col">
+      <div className="flex flex-col sm:flex-row gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search notes..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => {
+              setEditingNote(null);
+              setIsEditorOpen(true);
+            }}
+            size="sm"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            New Note
+          </Button>
+          <Button
+            onClick={handleExportPDF}
+            variant="outline"
+            size="sm"
+            disabled={notes.length === 0 || isExporting}
+          >
+            {isExporting ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <FileDown className="h-4 w-4 mr-2" />
+            )}
+            Export PDF
+          </Button>
+        </div>
+      </div>
+
+      {isEditorOpen && (
+        <NoteEditor
+          initialContent={editingNote?.content}
+          initialTimestamp={editingNote?.timestamp}
+          currentVideoTime={currentVideoTime}
+          onSave={handleSaveNote}
+          onCancel={() => {
+            setIsEditorOpen(false);
+            setEditingNote(null);
+          }}
+        />
+      )}
+
+      <div className="flex-1 overflow-y-auto space-y-3">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : notes.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <p className="text-sm">
+              {searchQuery
+                ? "No notes found matching your search"
+                : "No notes yet. Start taking notes while watching!"}
+            </p>
+          </div>
+        ) : (
+          notes.map((note) => (
+            <NoteCard
+              key={note.id}
+              id={note.id}
+              content={note.content}
+              timestamp={note.timestamp}
+              createdAt={note.createdAt}
+              chapterTitle={note.chapter?.title}
+              onEdit={() => handleEditNote(note)}
+              onDelete={handleDeleteNote}
+              onSeekTo={onSeekTo}
+            />
+          ))
+        )}
+      </div>
+    </div>
+  );
+};

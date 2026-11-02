@@ -94,3 +94,95 @@ export const NotesPanel = ({
       throw error;
     }
   };
+    const handleDeleteNote = async (noteId: string) => {
+    try {
+      await axios.delete(`/api/courses/${courseId}/student-notes/${noteId}`);
+      toast.success("Note deleted");
+      fetchNotes();
+    } catch (error) {
+      console.error("Error deleting note:", error);
+      toast.error("Failed to delete note");
+      throw error;
+    }
+  };
+
+  const handleEditNote = (note: Note) => {
+    setEditingNote(note);
+    setIsEditorOpen(true);
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      setIsExporting(true);
+      const pdf = new jsPDF();
+      const pageHeight = pdf.internal.pageSize.height;
+      const pageWidth = pdf.internal.pageSize.width;
+      const margin = 20;
+      const lineHeight = 7;
+      let yPosition = margin;
+
+      // Title
+      pdf.setFontSize(18);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Course Notes", margin, yPosition);
+      yPosition += 15;
+
+      // Date
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(`Exported: ${new Date().toLocaleDateString()}`, margin, yPosition);
+      yPosition += 10;
+
+      // Notes
+      pdf.setFontSize(12);
+      notes.forEach((note, index) => {
+        // Check if we need a new page
+        if (yPosition > pageHeight - 40) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+
+        // Note header
+        pdf.setFont("helvetica", "bold");
+        const headerText = `Note ${index + 1}${note.chapter ? ` - ${note.chapter.title}` : ""}`;
+        pdf.text(headerText, margin, yPosition);
+        yPosition += lineHeight;
+
+        // Timestamp
+        if (note.timestamp !== undefined) {
+          pdf.setFont("helvetica", "italic");
+          pdf.setFontSize(10);
+          const formatTime = (seconds: number) => {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, "0")}`;
+          };
+          pdf.text(`Timestamp: ${formatTime(note.timestamp)}`, margin, yPosition);
+          yPosition += lineHeight;
+        }
+
+        // Content
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(11);
+        const lines = pdf.splitTextToSize(note.content, pageWidth - 2 * margin);
+        lines.forEach((line: string) => {
+          if (yPosition > pageHeight - 20) {
+            pdf.addPage();
+            yPosition = margin;
+          }
+          pdf.text(line, margin, yPosition);
+          yPosition += lineHeight;
+        });
+
+        yPosition += 5; // Space between notes
+      });
+
+      pdf.save(`course-notes-${new Date().getTime()}.pdf`);
+      toast.success("Notes exported successfully");
+    } catch (error) {
+      console.error("Error exporting PDF:", error);
+      toast.error("Failed to export notes");
+    } finally {
+      setIsExporting(false);
+    }
+  };

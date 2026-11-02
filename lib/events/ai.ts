@@ -433,3 +433,86 @@ export const chatCompletionStream = async (
         body: JSON.stringify(body),
         signal: controller.signal,
       });
+      if (!res.ok || !res.body) {
+        const detail = await res.text().catch(() => "");
+        throw new Error(
+          `HTTP ${res.status}${detail ? `: ${detail.slice(0, 300)}` : ""}`,
+        );
+      }
+
+      const upstream = res.body;
+      const stream = new ReadableStream<Uint8Array>({
+        start(streamController) {
+          const reader = upstream.getReader();
+          const decoder = new TextDecoder();
+          let buffer = "";
+          const pump = async () => {
+            try {
+              const processLine = (line: string) => {
+                const trimmed = line.trim();
+                if (!trimmed.startsWith("data:")) return;
+                const payload = trimmed.slice(5).trim();
+                if (payload === "[DONE]") return;
+                try {
+                  const json = JSON.parse(payload);
+                  // Support flat (Gemini/Cline stream) and enveloped shapes
+                  const choices = json.choices ?? json.data?.choices;
+                  const delta = choices?.[0]?.delta?.content;
+                  if (typeof delta === "string" && delta.length > 0) {
+                    streamController.enqueue(new TextEncoder().encode(delta));
+                  }
+                } catch {
+                  // Ignore keep-alives / malformed partial lines
+                }
+              };
+
+              for (;;) {
+                const { done, value } = await reader.read();
+                buffer += done ? "" : decoder.decode(value, { stream: true });
+                const lines = buffer.split("\n");
+                // Keep the last (possibly incomplete) line in the buffer
+                buffer = lines.pop() ?? "";
+                for (const line of lines) processLine(line);
+                if (done) {
+                  // Flush a final line that has no trailing newline
+                  if (buffer) processLine(buffer);
+                  break;
+                }
+              }
+            } catch (error) {
+              console.warn(
+                `[AI] stream from ${provider.name} ended with error:`,
+                error,
+              );
+            } finally {
+              clearTimeout(timer);
+              streamController.close();
+            }
+          };
+          void pump();
+        },
+        cancel() {
+          clearTimeout(timer);
+          void upstream.cancel().catch(() => {});
+        },
+      });
+
+      if (attempts.length > 0) {
+        console.warn(`[AI] Fallback used (stream): ${provider.name}/${model}`);
+      }
+      return { stream, provider: provider.name, model };
+    } catch (error) {
+      clearTimeout(timer);
+      const message = error instanceof Error ? error.message : String(error);
+      attempts.push({ provider: provider.name, error: message });
+      console.warn(`[AI] ${provider.name} stream failed: ${message}`);
+    }
+  }
+
+  throw new AIError(
+    `All AI providers failed (${attempts.map((a) => a.provider).join(", ")}).`,
+    attempts,
+  );
+};
+
+      

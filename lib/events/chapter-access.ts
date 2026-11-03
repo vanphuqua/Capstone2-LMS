@@ -156,3 +156,42 @@ export async function getPreviousAccessibleChapter(
   
   return null;
 }
+
+export async function getEnhancedChapterAccessibility(
+  userId: string,
+  courseId: string,
+  isPurchased: boolean,
+  isInstructor: boolean
+): Promise<ChapterWithContent[]> {
+  // Get basic chapter accessibility
+  const chapterAccess = await getChapterAccessibility(userId, courseId, isPurchased, isInstructor);
+  
+  // Get chapters with full content (quizzes and assignments)
+  const chapters = await db.chapter.findMany({
+    where: { 
+      courseId,
+      isPublished: true,
+    },
+    include: {
+      userProgress: {
+        where: { userId },
+      },
+      quizzes: {
+        include: {
+          quizAttempts: {
+            where: { userId },
+          },
+        },
+        orderBy: { position: "asc" },
+      },
+      assignments: {
+        include: {
+          submissions: {
+            where: { studentId: userId },
+          },
+        },
+        orderBy: { createdAt: "asc" },
+      },
+    },
+    orderBy: { position: "asc" },
+  });

@@ -195,3 +195,14 @@ export async function getEnhancedChapterAccessibility(
     },
     orderBy: { position: "asc" },
   });
+
+  return chapters.map(chapter => {
+    const accessInfo = chapterAccess.find(access => access.id === chapter.id);
+    const isCompleted = chapter.userProgress.some(progress => progress.isCompleted);
+    const videoCompleted = isCompleted; // Assuming video completion marks chapter completion
+    
+    // For quizzes and assignments within a chapter, they're accessible if:
+    // 1. The chapter is accessible AND
+    // 2. For sequential content: previous content items are completed
+    
+    const chapterIsAccessible = accessInfo?.isAccessible || false;

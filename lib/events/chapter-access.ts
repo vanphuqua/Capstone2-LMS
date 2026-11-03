@@ -56,3 +56,59 @@ export async function getChapterAccessibility(
       position: "asc",
     },
   });
+
+  const chapterAccess: ChapterAccess[] = [];
+  let previousChapterCompleted = true; // First chapter should be accessible
+
+  for (let i = 0; i < chapters.length; i++) {
+    const chapter = chapters[i];
+    const userProgress = chapter.userProgress[0];
+    const isCompleted = userProgress?.isCompleted || false;
+    
+    let isAccessible = false;
+    let reason = "";
+
+    // Instructors have full access
+    if (isInstructor) {
+      isAccessible = true;
+      reason = "Instructor access";
+    }
+    // Free preview chapters are always accessible
+    else if (chapter.isFree || chapter.isPreview) {
+      isAccessible = true;
+      reason = "Free/Preview chapter";
+    }
+    // Check if user has purchased the course
+    else if (!isPurchased) {
+      isAccessible = false;
+      reason = "Course not purchased";
+    }
+    // First chapter is accessible if purchased
+    else if (i === 0) {
+      isAccessible = true;
+      reason = "First chapter";
+    }
+    // Subsequent chapters require previous chapter completion
+    else if (previousChapterCompleted) {
+      isAccessible = true;
+      reason = "Previous chapter completed";
+    }
+    // Chapter is locked if previous chapter not completed
+    else {
+      isAccessible = false;
+      reason = "Previous chapter not completed";
+    }
+
+    chapterAccess.push({
+      id: chapter.id,
+      isAccessible,
+      isCompleted,
+      reason,
+    });
+
+    // Update previousChapterCompleted for next iteration
+    previousChapterCompleted = isCompleted;
+  }
+
+  return chapterAccess;
+}

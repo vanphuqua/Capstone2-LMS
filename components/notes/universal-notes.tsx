@@ -464,3 +464,175 @@ export const UniversalNotes = ({
       </Card>
     );
   }
+  return (
+    <Card className={className}>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            {getContextIcon(context)}
+            Notes
+            {timestamp && (
+              <Badge variant="outline" className="ml-2">
+                <Clock className="h-3 w-3 mr-1" />
+                {Math.floor(timestamp / 60)}:
+                {String(Math.floor(timestamp % 60)).padStart(2, "0")}
+              </Badge>
+            )}
+          </CardTitle>
+          <Button
+            onClick={() => setIsCreating(true)}
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            New Note
+          </Button>
+        </div>
+
+        {/* Search and Filters */}
+        <div className="flex flex-col sm:flex-row gap-2 mt-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search notes..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger className="w-full sm:w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All</SelectItem>
+              <SelectItem value="SAVED">Saved</SelectItem>
+              <SelectItem value="DRAFTS">Drafts</SelectItem>
+              <SelectItem value="BOOKMARKED">Bookmarked</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={filterContext} onValueChange={setFilterContext}>
+            <SelectTrigger className="w-full sm:w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All Types</SelectItem>
+              <SelectItem value="CHAPTER">Chapter</SelectItem>
+              <SelectItem value="VIDEO">Video</SelectItem>
+              <SelectItem value="LIVE_STREAM">Live</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </CardHeader>
+
+      <CardContent>
+        {/* Create/Edit Note Form */}
+        {(isCreating || editingNote) && (
+          <Card className="mb-6">
+            <CardContent className="p-4">
+              <div className="space-y-4">
+                <Input
+                  placeholder="Note title..."
+                  value={newNote.title}
+                  onChange={(e) =>
+                    setNewNote({ ...newNote, title: e.target.value })
+                  }
+                />
+
+                <div className="min-h-[200px]">
+                  {ReactQuill ? (
+                    <ReactQuill
+                      theme="snow"
+                      value={newNote.richContent}
+                      onChange={(content) => {
+                        setNewNote({
+                          ...newNote,
+                          richContent: content,
+                          content: content.replace(/<[^>]*>/g, ""), // Strip HTML for plain text
+                        });
+                      }}
+                      modules={quillModules}
+                      placeholder="Start writing your note..."
+                    />
+                  ) : (
+                    <Textarea
+                      value={newNote.content}
+                      onChange={(e) =>
+                        setNewNote({
+                          ...newNote,
+                          content: e.target.value,
+                          richContent: e.target.value,
+                        })
+                      }
+                      placeholder="Start writing your note..."
+                      className="min-h-[200px] resize-none"
+                    />
+                  )}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex items-center gap-2">
+                    <Palette className="h-4 w-4" />
+                    {NOTE_COLORS.map((color) => (
+                      <button
+                        key={color.value}
+                        className={`w-6 h-6 rounded-full border-2 ${
+                          color.class
+                        } ${
+                          newNote.color === color.value
+                            ? "border-blue-500"
+                            : "border-gray-300"
+                        }`}
+                        onClick={() =>
+                          setNewNote({ ...newNote, color: color.value })
+                        }
+                        title={color.name}
+                      />
+                    ))}
+                  </div>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      setNewNote({
+                        ...newNote,
+                        isBookmarked: !newNote.isBookmarked,
+                      })
+                    }
+                  >
+                    {newNote.isBookmarked ? (
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    ) : (
+                      <StarOff className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    onClick={
+                      editingNote ? () => updateNote(editingNote) : createNote
+                    }
+                    disabled={saving !== null}
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    {saving === (editingNote || "new")
+                      ? "Saving..."
+                      : "Save Note"}
+                  </Button>
+                  <Button variant="outline" onClick={cancelEditing}>
+                    Cancel
+                  </Button>
+                  {editingNote && (
+                    <Badge variant="secondary" className="ml-auto">
+                      {saving === editingNote
+                        ? "Saving draft..."
+                        : "Auto-saving"}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}

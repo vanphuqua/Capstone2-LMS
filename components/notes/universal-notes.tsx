@@ -636,3 +636,145 @@ export const UniversalNotes = ({
             </CardContent>
           </Card>
         )}
+
+        {/* Notes List */}
+        <div className="space-y-4">
+          {filteredNotes.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
+              <p>No notes found</p>
+              <p className="text-sm">Create your first note to get started!</p>
+            </div>
+          ) : (
+            filteredNotes.map((note) => (
+              <Card
+                key={note.id}
+                className={`${
+                  note.color ? `bg-${note.color}-50` : ""
+                } hover:shadow-md transition-shadow`}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2 flex-1">
+                      <h3 className="font-semibold text-lg">{note.title}</h3>
+                      {note.isBookmarked && (
+                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      )}
+                      {note.isDraft && <Badge variant="outline">Draft</Badge>}
+                    </div>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => startEditing(note)}>
+                          <Edit3 className="h-4 w-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => toggleBookmark(note.id)}
+                        >
+                          {note.isBookmarked ? (
+                            <>
+                              <StarOff className="h-4 w-4 mr-2" />
+                              Remove Bookmark
+                            </>
+                          ) : (
+                            <>
+                              <Star className="h-4 w-4 mr-2" />
+                              Add Bookmark
+                            </>
+                          )}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => exportToPDF(note.id)}>
+                          <Download className="h-4 w-4 mr-2" />
+                          Export PDF
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => deleteNote(note.id)}
+                          className="text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+
+                  {/* Note Content */}
+                  <div className="prose prose-sm max-w-none mb-3 [&>span]:block [&>p]:m-0">
+                    {note.richContent ? (
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: note.richContent
+                            .replace(
+                              /<div([^>]*)>/g,
+                              '<span$1 style="display: block;">'
+                            )
+                            .replace(/<\/div>/g, "</span>"),
+                        }}
+                        suppressHydrationWarning
+                      />
+                    ) : (
+                      <p>{note.content}</p>
+                    )}
+                  </div>
+
+                  {/* Metadata */}
+                  <div className="flex items-center justify-between text-sm text-gray-500">
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant="outline"
+                        className={getContextColor(note.context)}
+                      >
+                        {getContextIcon(note.context)}
+                        <span className="ml-1">
+                          {note.context.replace("_", " ")}
+                        </span>
+                      </Badge>
+
+                      {note.timestamp && (
+                        <Badge variant="outline">
+                          <Clock className="h-3 w-3 mr-1" />
+                          {Math.floor(note.timestamp / 60)}:
+                          {String(Math.floor(note.timestamp % 60)).padStart(
+                            2,
+                            "0"
+                          )}
+                        </Badge>
+                      )}
+
+                      {note.tags.length > 0 && (
+                        <div className="flex gap-1">
+                          {note.tags.map((tag, index) => (
+                            <Badge
+                              key={index}
+                              variant="secondary"
+                              className="text-xs"
+                            >
+                              <Tag className="h-2 w-2 mr-1" />
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="text-xs">
+                      {note.isDraft ? "Last saved" : "Created"}:{" "}
+                      {format(new Date(note.updatedAt), "MMM d, yyyy HH:mm")}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};

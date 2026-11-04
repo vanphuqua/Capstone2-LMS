@@ -70,3 +70,25 @@ export async function validateChapterCompletion(
   const hasVideo = !!chapter.videoUrl;
   const totalQuizzes = chapter.quizzes.length;
   const totalAssignments = chapter.assignments.length;
+
+  // ─── 1. Video completion check ───
+  let videoCompleted = false;
+  if (hasVideo) {
+    const videoAnalytics = await db.videoAnalytics.findUnique({
+      where: {
+        userId_chapterId: {
+          userId,
+          chapterId,
+        },
+      },
+      select: {
+        completedVideo: true,
+      },
+    });
+
+    videoCompleted = videoAnalytics?.completedVideo === true;
+
+    if (!videoCompleted) {
+      reasons.push("VIDEO_NOT_COMPLETED");
+    }
+  }

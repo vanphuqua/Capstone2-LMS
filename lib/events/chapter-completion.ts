@@ -51,3 +51,22 @@ export async function validateChapterCompletion(
       },
     },
   });
+
+  if (!chapter) {
+    return {
+      eligible: false,
+      reasons: ["Chapter not found"],
+      details: {
+        hasVideo: false,
+        videoCompleted: false,
+        totalQuizzes: 0,
+        completedQuizzes: 0,
+        totalAssignments: 0,
+        completedAssignments: 0,
+      },
+    };
+  }
+
+  const hasVideo = !!chapter.videoUrl;
+  const totalQuizzes = chapter.quizzes.length;
+  const totalAssignments = chapter.assignments.length;

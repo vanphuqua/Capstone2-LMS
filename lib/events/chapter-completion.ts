@@ -92,3 +92,25 @@ export async function validateChapterCompletion(
       reasons.push("VIDEO_NOT_COMPLETED");
     }
   }
+
+  // ─── 2. Quiz completion check ───
+  let completedQuizzes = 0;
+  if (totalQuizzes > 0) {
+    const quizIds = chapter.quizzes.map((q) => q.id);
+
+    const quizAttempts = await db.quizAttempt.findMany({
+      where: {
+        userId,
+        quizId: { in: quizIds },
+      },
+      select: { quizId: true },
+    });
+
+    // Count unique quizzes that have been attempted
+    const attemptedQuizIds = new Set(quizAttempts.map((a) => a.quizId));
+    completedQuizzes = attemptedQuizIds.size;
+
+    if (completedQuizzes < totalQuizzes) {
+      reasons.push("QUIZZES_NOT_COMPLETED");
+    }
+  }

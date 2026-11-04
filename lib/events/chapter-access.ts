@@ -206,3 +206,29 @@ export async function getEnhancedChapterAccessibility(
     // 2. For sequential content: previous content items are completed
     
     const chapterIsAccessible = accessInfo?.isAccessible || false;
+
+    // Process quizzes
+    const quizzes = chapter.quizzes.map((quiz, index) => {
+      const quizCompleted = quiz.quizAttempts.length > 0;
+      let quizAccessible = false;
+      
+      if (chapterIsAccessible) {
+        if (index === 0) {
+          // First quiz is accessible if video is completed or if instructor
+          quizAccessible = videoCompleted || isInstructor;
+        } else {
+          // Subsequent quizzes require previous quiz completion
+          const previousQuizCompleted = chapter.quizzes[index - 1]?.quizAttempts.length > 0;
+          quizAccessible = previousQuizCompleted || isInstructor;
+        }
+      }
+      
+      return {
+        id: quiz.id,
+        title: quiz.title,
+        position: quiz.position,
+        isCompleted: quizCompleted,
+        timeline: quiz.timeline,
+        isAccessible: quizAccessible,
+      };
+    });

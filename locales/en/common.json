@@ -1,0 +1,73 @@
+{
+  "welcome": "Welcome",
+  "search": "Search",
+  "save": "Save",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "edit": "Edit",
+  "confirm": "Confirm",
+  "loading": "Loading...",
+  "teacher_mode": "Teacher mode",
+  "admin_panel": "Admin panel",
+  "exit": "Exit",
+  "logout": "Log out",
+  "login": "Log in",
+  "register": "Register",
+  "language": "Language",
+  "vietnamese": "Tiếng Việt",
+  "english": "English",
+  "profile": "Profile",
+  "settings": "Settings",
+  "dismiss_announcement": "Dismiss announcement",
+  "confirm_modal": {
+    "title": "Are you sure?",
+    "description": "This action cannot be undone.",
+    "cancel": "Cancel",
+    "continue": "Continue"
+  },
+  "user_info": {
+    "id": "ID",
+    "name": "Name",
+    "email": "Email",
+    "role": "Role"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "new_count": "{count} new",
+    "read_all": "Read all",
+    "all": "All",
+    "none": "No notifications yet",
+    "view_all": "View all notifications",
+    "just_now": "Just now",
+    "minutes_ago": "{count}m ago",
+    "hours_ago": "{count}h ago",
+    "days_ago": "{count}d ago"
+  },
+  "theme": {
+    "toggle": "Toggle theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "error_page": {
+    "title": "Something went wrong",
+    "desc": "We hit an unexpected error while rendering this page.",
+    "retry": "Try again"
+  },
+  "not_found": {
+    "title": "Page Not Found",
+    "desc": "The page you are looking for does not exist or has been moved.",
+    "home": "Go Home"
+  },
+  "landing": {
+    "sign_in": "Sign In",
+    "sign_up": "Sign Up",
+    "sign_out": "Sign Out",
+    "redirecting": "Redirecting to dashboard...",
+    "hero_line1": "Online",
+    "hero_line2": "Learning you can access",
+    "hero_line3": "anywhere easily!",
+    "hero_desc": "Discover a new way to communicate & connect with fast, easy & unlimited free chat today!",
+    "get_started": "Get Started"
+  }
+}

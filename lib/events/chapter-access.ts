@@ -206,3 +206,69 @@ export async function getEnhancedChapterAccessibility(
     // 2. For sequential content: previous content items are completed
     
     const chapterIsAccessible = accessInfo?.isAccessible || false;
+
+    // Process quizzes
+    const quizzes = chapter.quizzes.map((quiz, index) => {
+      const quizCompleted = quiz.quizAttempts.length > 0;
+      let quizAccessible = false;
+      
+      if (chapterIsAccessible) {
+        if (index === 0) {
+          // First quiz is accessible if video is completed or if instructor
+          quizAccessible = videoCompleted || isInstructor;
+        } else {
+          // Subsequent quizzes require previous quiz completion
+          const previousQuizCompleted = chapter.quizzes[index - 1]?.quizAttempts.length > 0;
+          quizAccessible = previousQuizCompleted || isInstructor;
+        }
+      }
+      
+      return {
+        id: quiz.id,
+        title: quiz.title,
+        position: quiz.position,
+        isCompleted: quizCompleted,
+        timeline: quiz.timeline,
+        isAccessible: quizAccessible,
+      };
+    });
+
+    // Process assignments
+    const assignments = chapter.assignments.map(assignment => {
+      // Assignment is completed if it has a submission AND is verified by teacher
+      const hasValidSubmission = assignment.submissions.some(sub => 
+        sub.status === 'submitted' || sub.status === 'graded'
+      );
+      const isVerified = assignment.verificationStatus === 'verified';
+      const assignmentCompleted = hasValidSubmission && isVerified;
+      
+      const now = new Date();
+      const isLate = now > assignment.dueDate && !assignmentCompleted;
+      
+      // Assignments are accessible if chapter is accessible and all quizzes are completed
+      const allQuizzesCompleted = quizzes.every(quiz => quiz.isCompleted);
+      const assignmentAccessible = chapterIsAccessible && (allQuizzesCompleted || quizzes.length === 0 || isInstructor);
+      
+      return {
+        id: assignment.id,
+        title: assignment.title,
+        dueDate: assignment.dueDate,
+        isCompleted: assignmentCompleted,
+        isLate,
+        isAccessible: assignmentAccessible,
+      };
+    });
+
+    return {
+      id: chapter.id,
+      title: chapter.title,
+      position: chapter.position,
+      isCompleted,
+      isAccessible: chapterIsAccessible,
+      isActive: false, // Will be set by the component based on current route
+      videoCompleted,
+      quizzes,
+      assignments,
+    };
+  });
+}

@@ -676,3 +676,70 @@
     "keep_going": "Keep going!",
     "complete_remaining": "Complete the remaining requirements to earn your certificate."
   },
+  "video_player": {
+    "progress_updated": "Progress updated",
+    "something_went_wrong": "Something went wrong",
+    "enroll_success": "Successfully enrolled in the course!",
+    "enroll_button": "Enroll in the course",
+    "course_completed": "Congratulations! You have completed the course!",
+    "chapter_completed_next": "Chapter completed! Moving to next lesson...",
+    "progress_failed": "Failed to update progress",
+    "quiz_available": "Quiz Available!",
+    "quiz_hint": "Test your knowledge on this topic",
+    "take_quiz": "Take Quiz",
+    "skip_quiz": "Skip Quiz",
+    "skip_hint": "You can take the quiz later from the Quizzes tab",
+    "chapter_locked": "This chapter is locked",
+    "loading_stream": "Loading stream...",
+    "draft": "Draft",
+    "due": "Due",
+    "submitted": "submitted",
+    "graded": "graded",
+    "pending": "pending",
+    "quality_failed": "Unable to load selected quality, reverting to Auto",
+    "pip_unsupported": "Picture-in-Picture not supported",
+    "note_added": "Note added!",
+    "note_deleted": "Note deleted",
+    "bookmark_added": "Bookmark added!",
+    "link_copied": "Link copied to clipboard!",
+    "download_started": "Download started",
+    "fullscreen_unsupported": "Fullscreen mode is not supported in your browser",
+    "fullscreen_failed": "Could not enter fullscreen mode"
+  },
+  "upload": {
+    "complete": "Upload complete!",
+    "too_large": "File too large. Maximum size: {size}MB",
+    "bad_type": "Unsupported file type. Allowed: {types}",
+    "auth_failed": "Authentication failed. Please refresh and try again.",
+    "network": "Network error. Check your internet connection.",
+    "size_exceed": "File size exceeds {size}MB. Your file is {actual}MB",
+    "type_not_allowed": "File type not allowed. Supported: {types}"
+  },
+  "certificate_btn": {
+    "downloaded": "Certificate downloaded!",
+    "download_failed": "Failed to download certificate",
+    "downloading": "Downloading...",
+    "download": "Download Certificate"
+  },
+  "live_polls": {
+    "fill_all": "Please fill in all fields",
+    "created": "Poll created successfully!",
+    "create_failed": "Failed to create poll",
+    "ended": "Poll ended",
+    "end_failed": "Failed to end poll",
+    "deleted": "Poll deleted",
+    "delete_failed": "Failed to delete poll"
+  },
+  "notify_prefs": {
+    "updated": "Preferences updated",
+    "update_failed": "Failed to update preferences",
+    "load_failed": "Failed to load preferences",
+    "saving": "Saving...",
+    "save": "Save Preferences"
+  },
+  "purchase": {
+    "checkout_failed": "Checkout failed - please try again",
+    "marked_completed": "Purchase marked as completed",
+    "debug_failed": "Completion failed"
+  }
+}

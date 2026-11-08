@@ -241,3 +241,48 @@ export async function generateCertificatePdf(
     thickness: 1.5,
     color: rgb(0.6, 0.5, 0.2),
   });
+
+  // "This is to certify that"
+  const certifyText = "This is to certify that";
+  const certifyWidth = italicFont.widthOfTextAtSize(certifyText, 14);
+  const certifyY = height - 155 - titleOffset - 55;
+  page.drawText(certifyText, {
+    x: (width - certifyWidth) / 2,
+    y: certifyY,
+    size: 14,
+    font: italicFont,
+    color: rgb(0.4, 0.4, 0.4),
+  });
+
+  // Student name
+  const trimmedStudentName = String(studentName).substring(0, 60);
+  const nameSize = 28;
+  const nameWidth = boldFont.widthOfTextAtSize(trimmedStudentName, nameSize);
+  const nameY = certifyY - 35;
+  page.drawText(trimmedStudentName, {
+    x: (width - nameWidth) / 2,
+    y: nameY,
+    size: nameSize,
+    font: boldFont,
+    color: rgb(0.1, 0.1, 0.1),
+  });
+
+  // Underline for student name
+  page.drawLine({
+    start: { x: width / 2 - 120, y: nameY - 7 },
+    end: { x: width / 2 + 120, y: nameY - 7 },
+    thickness: 1,
+    color: rgb(0.3, 0.3, 0.3),
+  });
+
+  // Completion phrase
+  const completedText = "has successfully completed the course";
+  const completedWidth = italicFont.widthOfTextAtSize(completedText, 14);
+  const completedY = nameY - 40;
+  page.drawText(completedText, {
+    x: (width - completedWidth) / 2,
+    y: completedY,
+    size: 14,
+    font: italicFont,
+    color: rgb(0.4, 0.4, 0.4),
+  });

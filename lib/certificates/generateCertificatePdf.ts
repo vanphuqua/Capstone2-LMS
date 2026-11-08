@@ -286,3 +286,47 @@ export async function generateCertificatePdf(
     font: italicFont,
     color: rgb(0.4, 0.4, 0.4),
   });
+
+ // Course title with wrapping
+ const courseSize = 22;
+ const maxCourseWidth = width - 160;
+
+ const wrapText = (text: string, maxWidth: number): string[] => {
+   const words = text.split(" ");
+   const lines: string[] = [];
+   let current = "";
+
+   for (const word of words) {
+     const test = current ? `${current} ${word}` : word;
+     const w = boldFont.widthOfTextAtSize(test, courseSize);
+     if (w > maxCourseWidth && current) {
+       lines.push(current);
+       current = word;
+     } else {
+       current = test;
+     }
+   }
+   if (current) lines.push(current);
+   return lines;
+ };
+
+ const courseLines = wrapText(courseTitle, maxCourseWidth);
+ let courseY = completedY - 30;
+ for (const line of courseLines) {
+   const lineWidth = boldFont.widthOfTextAtSize(line, courseSize);
+   page.drawText(line, {
+     x: (width - lineWidth) / 2,
+     y: courseY,
+     size: courseSize,
+     font: boldFont,
+     color: rgb(0.15, 0.3, 0.5),
+   });
+   courseY -= courseSize + 4;
+ }
+
+ // Instructor line
+ const instructorLabel = "Instructor: ";
+ const instructorLabelWidth = regularFont.widthOfTextAtSize(
+   instructorLabel,
+   12,
+ );

@@ -99,3 +99,68 @@ export async function generateCertificatePdf(
       width: desiredWidth,
       height: logoHeight,
     });
+
+    const orgName = process.env.CERTIFICATE_ORG_NAME || "Marwadi University";
+    const orgFontSize = 16;
+    const orgWidth = boldFont.widthOfTextAtSize(orgName, orgFontSize);
+    page.drawText(orgName, {
+      x: (width - orgWidth) / 2,
+      y: logoY - 18,
+      size: orgFontSize,
+      font: boldFont,
+      color: rgb(0.15, 0.15, 0.25),
+    });
+  } catch {
+    // If logo file or env is missing, continue without breaking certificate
+  }
+
+  // Corner decorations
+  const cornerSize = 30;
+  page.drawLine({
+    start: { x: 35, y: height - 35 },
+    end: { x: 35 + cornerSize, y: height - 35 },
+    thickness: 2,
+    color: rgb(0.6, 0.5, 0.2),
+  });
+  page.drawLine({
+    start: { x: 35, y: height - 35 },
+    end: { x: 35, y: height - 35 - cornerSize },
+    thickness: 2,
+    color: rgb(0.6, 0.5, 0.2),
+  });
+  page.drawLine({
+    start: { x: width - 35 - cornerSize, y: height - 35 },
+    end: { x: width - 35, y: height - 35 },
+    thickness: 2,
+    color: rgb(0.6, 0.5, 0.2),
+  });
+  page.drawLine({
+    start: { x: width - 35, y: height - 35 },
+    end: { x: width - 35, y: height - 35 - cornerSize },
+    thickness: 2,
+    color: rgb(0.6, 0.5, 0.2),
+  });
+  page.drawLine({
+    start: { x: 35, y: 35 },
+    end: { x: 35 + cornerSize, y: 35 },
+    thickness: 2,
+    color: rgb(0.6, 0.5, 0.2),
+  });
+  page.drawLine({
+    start: { x: 35, y: 35 },
+    end: { x: 35, y: 35 + cornerSize },
+    thickness: 2,
+    color: rgb(0.6, 0.5, 0.2),
+  });
+  page.drawLine({
+    start: { x: width - 35 - cornerSize, y: 35 },
+    end: { x: width - 35, y: 35 },
+    thickness: 2,
+    color: rgb(0.6, 0.5, 0.2),
+  });
+  page.drawLine({
+    start: { x: width - 35, y: 35 },
+    end: { x: width - 35, y: 35 + cornerSize },
+    thickness: 2,
+    color: rgb(0.6, 0.5, 0.2),
+  });

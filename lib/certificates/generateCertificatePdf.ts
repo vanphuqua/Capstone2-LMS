@@ -330,3 +330,30 @@ export async function generateCertificatePdf(
    instructorLabel,
    12,
  );
+ const instructorNameWidth = boldFont.widthOfTextAtSize(teacherName, 12);
+  const totalInstructorWidth = instructorLabelWidth + instructorNameWidth;
+  page.drawText(instructorLabel, {
+    x: (width - totalInstructorWidth) / 2,
+    y: courseY - 25,
+    size: 12,
+    font: regularFont,
+    color: rgb(0.4, 0.4, 0.4),
+  });
+  page.drawText(teacherName, {
+    x: (width - totalInstructorWidth) / 2 + instructorLabelWidth,
+    y: courseY - 25,
+    size: 12,
+    font: boldFont,
+    color: rgb(0.2, 0.2, 0.2),
+  });
+
+  // Score and requirements
+  const scoreText = `Score: ${scorePercent}% (Minimum Required: ${minPercentage}%)`;
+  const scoreWidth = regularFont.widthOfTextAtSize(scoreText, 11);
+  page.drawText(scoreText, {
+    x: (width - scoreWidth) / 2,
+    y: courseY - 45,
+    size: 11,
+    font: regularFont,
+    color: rgb(0.1, 0.5, 0.2),
+  });

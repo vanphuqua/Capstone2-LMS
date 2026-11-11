@@ -357,3 +357,57 @@ export async function generateCertificatePdf(
     font: regularFont,
     color: rgb(0.1, 0.5, 0.2),
   });
+
+  // Completion date
+  const dateFormatted = issueDate.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const dateLabel = "Date of Completion: ";
+  const dateLabelWidth = regularFont.widthOfTextAtSize(dateLabel, 11);
+  const dateValueWidth = boldFont.widthOfTextAtSize(dateFormatted, 11);
+  const totalDateWidth = dateLabelWidth + dateValueWidth;
+  page.drawText(dateLabel, {
+    x: (width - totalDateWidth) / 2,
+    y: courseY - 65,
+    size: 11,
+    font: regularFont,
+    color: rgb(0.4, 0.4, 0.4),
+  });
+  page.drawText(dateFormatted, {
+    x: (width - totalDateWidth) / 2 + dateLabelWidth,
+    y: courseY - 65,
+    size: 11,
+    font: boldFont,
+    color: rgb(0.2, 0.2, 0.2),
+  });
+
+  // Signature section
+  const sigLineY = 95;
+  page.drawLine({
+    start: { x: width / 2 - 100, y: sigLineY },
+    end: { x: width / 2 + 100, y: sigLineY },
+    thickness: 1,
+    color: rgb(0.3, 0.3, 0.3),
+  });
+
+  const signatureName = teacherName;
+  const sigNameWidth = boldFont.widthOfTextAtSize(signatureName, 14);
+  page.drawText(signatureName, {
+    x: (width - sigNameWidth) / 2,
+    y: sigLineY + 15,
+    size: 14,
+    font: boldFont,
+    color: rgb(0.15, 0.15, 0.15),
+  });
+
+  const sigTitleToUse = signatureTitle || "Course Instructor";
+  const sigTitleWidth = regularFont.widthOfTextAtSize(sigTitleToUse, 11);
+  page.drawText(sigTitleToUse, {
+    x: (width - sigTitleWidth) / 2,
+    y: sigLineY - 18,
+    size: 11,
+    font: regularFont,
+    color: rgb(0.4, 0.4, 0.4),
+  });

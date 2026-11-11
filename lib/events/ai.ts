@@ -40,3 +40,40 @@ export interface AIUsage {
     latencyMs: number;
     usage?: AIUsage;
   }
+
+  export interface ChatCompletionOptions {
+    /** Override the default model for this call */
+    model?: string;
+    temperature?: number;
+    maxTokens?: number;
+    /** Per-attempt timeout in ms (default AI_TIMEOUT_MS or 30000) */
+    timeoutMs?: number;
+  }
+  
+  export class AIError extends Error {
+    readonly attempts: Array<{ provider: AIProvider; error: string }>;
+  
+    constructor(
+      message: string,
+      attempts: Array<{ provider: AIProvider; error: string }>,
+    ) {
+      super(message);
+      this.name = "AIError";
+      this.attempts = attempts;
+    }
+  }
+  
+  interface ProviderConfig {
+    name: AIProvider;
+    baseUrl: string;
+    apiKey: string;
+    defaultModel: string;
+  }
+  
+  const DEFAULT_TIMEOUT_MS = 30_000;
+  
+  const getTimeoutMs = (): number => {
+    const raw = parseInt(process.env.AI_TIMEOUT_MS || "", 10);
+    return Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_TIMEOUT_MS;
+  };
+  

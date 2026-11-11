@@ -411,3 +411,35 @@ export async function generateCertificatePdf(
     font: regularFont,
     color: rgb(0.4, 0.4, 0.4),
   });
+
+  // Optional organization name under signature (used by sample preview)
+  if (organizationNameUnderSignature && organizationNameUnderSignature.trim()) {
+    const orgWidth = italicFont.widthOfTextAtSize(
+      organizationNameUnderSignature,
+      10,
+    );
+    page.drawText(organizationNameUnderSignature, {
+      x: (width - orgWidth) / 2,
+      y: sigLineY - 35,
+      size: 10,
+      font: italicFont,
+      color: rgb(0.5, 0.5, 0.5),
+    });
+  }
+
+  // Verification code at bottom
+  if (verificationCode) {
+    const verifyText = `Verification: ${verificationCode}`;
+    const verifyWidth = regularFont.widthOfTextAtSize(verifyText, 8);
+    page.drawText(verifyText, {
+      x: (width - verifyWidth) / 2,
+      y: 40,
+      size: 8,
+      font: regularFont,
+      color: rgb(0.6, 0.6, 0.6),
+    });
+  }
+
+  const pdfBytes = await pdfDoc.save();
+  return pdfBytes;
+}

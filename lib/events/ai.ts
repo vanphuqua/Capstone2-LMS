@@ -166,3 +166,46 @@ class ProviderHttpError extends Error {
     const raw = parseInt(process.env.AI_PROVIDER_RETRIES || "", 10);
     return Number.isFinite(raw) ? Math.min(Math.max(raw, 0), 3) : 1;
   };
+  
+  const callProvider = async (
+    provider: ProviderConfig,
+    messages: ChatMessage[],
+    options: ChatCompletionOptions,
+  ): Promise<AIResult> => {
+    const model = options.model || provider.defaultModel;
+    const timeoutMs = options.timeoutMs || getTimeoutMs();
+    const startedAt = Date.now();
+    const maxRetries = getProviderRetries();
+  
+    const runOnce = async (): Promise<AIResult> => {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+  
+      try {
+        const body: Record<string, unknown> = { model, messages };
+        if (options.temperature !== undefined) body.temperature = options.temperature;
+        if (options.maxTokens !== undefined) body.max_tokens = options.maxTokens;
+  
+        const res = await fetch(`${provider.baseUrl}/chat/completions`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${provider.apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body),
+          signal: controller.signal,
+        });
+  
+        if (!res.ok) {
+          const detail = await res.text().catch(() => "");
+          // Retry-After is in seconds; cap it so a request never stalls too long
+          const retryAfter = res.headers.get("retry-after");
+          const parsedRetryAfter = retryAfter
+            ? Math.min(parseInt(retryAfter, 10) * 1000, 3_000)
+            : NaN;
+          throw new ProviderHttpError(
+            `HTTP ${res.status}${detail ? `: ${detail.slice(0, 300)}` : ""}`,
+            res.status,
+            Number.isFinite(parsedRetryAfter) ? parsedRetryAfter : undefined,
+          );
+        }

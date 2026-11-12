@@ -284,3 +284,40 @@ class ProviderHttpError extends Error {
         [],
       );
     }
+
+    const attempts: Array<{ provider: AIProvider; error: string }> = [];
+
+    for (const provider of providers) {
+      try {
+        const result = await callProvider(provider, messages, options);
+        if (attempts.length > 0) {
+          console.warn(
+            `[AI] Fallback used: ${result.provider}/${result.model} answered after ${attempts.map((a) => a.provider).join(", ")} failed`,
+          );
+        }
+        return result;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        attempts.push({ provider: provider.name, error: message });
+        console.warn(`[AI] ${provider.name} failed: ${message}`);
+      }
+    }
+  
+    throw new AIError(
+      `All AI providers failed (${attempts.map((a) => a.provider).join(", ")}).`,
+      attempts,
+    );
+  };
+  
+  /** Strip markdown fences models sometimes wrap around JSON */
+  const extractJSON = (text: string): string => {
+    const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    if (fenced) return fenced[1].trim();
+    const start = text.indexOf("{");
+    const startArr = text.indexOf("[");
+    const first =
+      start === -1 ? startArr : startArr === -1 ? start : Math.min(start, startArr);
+    if (first === -1) return text.trim();
+    const last = Math.max(text.lastIndexOf("}"), text.lastIndexOf("]"));
+    return last > first ? text.slice(first, last + 1) : text.trim();
+  };

@@ -209,3 +209,40 @@ class ProviderHttpError extends Error {
             Number.isFinite(parsedRetryAfter) ? parsedRetryAfter : undefined,
           );
         }
+
+        const raw = (await res.json()) as ChatCompletionResponse & {
+          data?: ChatCompletionResponse;
+        };
+        // Cline wraps the OpenAI payload in { data: {...} }; Gemini returns it flat
+        const data = raw.data && raw.data.choices ? raw.data : raw;
+        const choice = data.choices?.[0];
+        const content = choice?.message?.content;
+  
+        // Surface finish_reason + a body snippet so empty replies are debuggable
+        if (!content || !content.trim()) {
+          const snippet = JSON.stringify(raw).slice(0, 300);
+          throw new Error(
+            `Empty content in response (finish_reason=${choice?.finish_reason ?? "n/a"}, body=${snippet})`,
+          );
+        }
+  
+        const usage: AIUsage | undefined = data.usage
+          ? {
+              promptTokens: data.usage.prompt_tokens ?? 0,
+              completionTokens: data.usage.completion_tokens ?? 0,
+              totalTokens: data.usage.total_tokens ?? 0,
+            }
+          : undefined;
+  
+        return {
+          content,
+          provider: provider.name,
+          model,
+          fallbackUsed: provider.name !== "gemini",
+          latencyMs: Date.now() - startedAt,
+          usage,
+        };
+      } finally {
+        clearTimeout(timer);
+      }
+    };

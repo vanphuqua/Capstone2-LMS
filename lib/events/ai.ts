@@ -321,3 +321,59 @@ class ProviderHttpError extends Error {
     const last = Math.max(text.lastIndexOf("}"), text.lastIndexOf("]"));
     return last > first ? text.slice(first, last + 1) : text.trim();
   };
+
+  export interface GenerateJSONResult<T> {
+    data: T;
+    result: AIResult;
+  }
+  
+  /**
+   * Generate a value matching a Zod schema. Sends a JSON-only instruction,
+   * validates the reply, and makes ONE repair attempt on invalid JSON.
+   */
+  export const generateJSON = async <T>(
+    schema: z.ZodType<T>,
+    messages: ChatMessage[],
+    options: ChatCompletionOptions = {},
+  ): Promise<GenerateJSONResult<T>> => {
+    const instruction: ChatMessage = {
+      role: "system",
+      content:
+        "You must respond with a single valid JSON value only. " +
+        "No markdown, no code fences, no commentary before or after the JSON.",
+    };
+  
+    let attemptMessages: ChatMessage[] = [instruction, ...messages];
+    let lastResult: AIResult | undefined;
+    let lastError = "";
+  
+    for (let i = 0; i < 2; i++) {
+      const result = await chatCompletion(attemptMessages, options);
+      lastResult = result;
+  
+      try {
+        const parsed: unknown = JSON.parse(extractJSON(result.content));
+        const validated = schema.safeParse(parsed);
+        if (validated.success) {
+          return { data: validated.data, result };
+        }
+        lastError = validated.error.issues
+          .slice(0, 5)
+          .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+          .join("; ");
+      } catch (error) {
+        lastError = error instanceof Error ? error.message : String(error);
+      }
+  
+      // Repair attempt: send the invalid reply back and ask for a corrected JSON
+      attemptMessages = [
+        ...attemptMessages,
+        { role: "assistant", content: result.content },
+        {
+          role: "user",
+          content:
+            `Your previous response could not be used (${lastError}). ` +
+            "Reply again with the corrected, valid JSON value only.",
+        },
+      ];
+    }

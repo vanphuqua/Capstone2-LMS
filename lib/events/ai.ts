@@ -409,3 +409,34 @@ class ProviderHttpError extends Error {
       );
     }
   
+    const attempts: Array<{ provider: AIProvider; error: string }> = [];
+
+  for (const provider of providers) {
+    const model = options.model || provider.defaultModel;
+    const controller = new AbortController();
+    // Streams may run long; default to 60s unless overridden
+    const timeoutMs = options.timeoutMs || Math.max(getTimeoutMs(), 60_000);
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const body: Record<string, unknown> = { model, messages, stream: true };
+      if (options.temperature !== undefined) {
+        body.temperature = options.temperature;
+      }
+
+      const res = await fetch(`${provider.baseUrl}/chat/completions`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${provider.apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+
+      if (!res.ok || !res.body) {
+        const detail = await res.text().catch(() => "");
+        throw new Error(
+          `HTTP ${res.status}${detail ? `: ${detail.slice(0, 300)}` : ""}`,
+        );
+      }

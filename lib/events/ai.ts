@@ -497,3 +497,21 @@ class ProviderHttpError extends Error {
           void upstream.cancel().catch(() => {});
         },
       });
+
+      if (attempts.length > 0) {
+        console.warn(`[AI] Fallback used (stream): ${provider.name}/${model}`);
+      }
+      return { stream, provider: provider.name, model };
+    } catch (error) {
+      clearTimeout(timer);
+      const message = error instanceof Error ? error.message : String(error);
+      attempts.push({ provider: provider.name, error: message });
+      console.warn(`[AI] ${provider.name} stream failed: ${message}`);
+    }
+  }
+
+  throw new AIError(
+    `All AI providers failed (${attempts.map((a) => a.provider).join(", ")}).`,
+    attempts,
+  );
+};

@@ -178,3 +178,30 @@ export const cachedQueries = {
   /**
    * Get enrolled student count (used for analytics)
    */
+  async getEnrolledCount(courseId: string, db: any) {
+    return cache.getOrSet(
+      `enrolled_count:${courseId}`,
+      CacheTTL.SHORT,
+      async () => {
+        return db.purchase.count({
+          where: { courseId, paymentStatus: "completed" },
+        });
+      },
+    );
+  },
+
+  /**
+   * Invalidate course-related caches
+   */
+  invalidateCourse(courseId: string) {
+    cache.deletePattern(`course:${courseId}`);
+    cache.deletePattern(`enrolled_count:${courseId}`);
+  },
+
+  /**
+   * Invalidate user-related caches
+   */
+  invalidateUser(userId: string) {
+    cache.deletePattern(`user:${userId}`);
+  },
+};

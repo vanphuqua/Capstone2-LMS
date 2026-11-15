@@ -105,3 +105,33 @@ export async function getChapterAccessibility(
       isCompleted,
       reason,
     });
+
+     // Update previousChapterCompleted for next iteration
+     previousChapterCompleted = isCompleted;
+    }
+  
+    return chapterAccess;
+  }
+  
+  export async function getNextAccessibleChapter(
+    userId: string,
+    courseId: string,
+    currentChapterId: string,
+    isPurchased: boolean,
+    isInstructor: boolean
+  ): Promise<string | null> {
+    const accessibility = await getChapterAccessibility(userId, courseId, isPurchased, isInstructor);
+    
+    // Find current chapter index
+    const currentIndex = accessibility.findIndex(ch => ch.id === currentChapterId);
+    
+    // Look for next accessible chapter
+    for (let i = currentIndex + 1; i < accessibility.length; i++) {
+      if (accessibility[i].isAccessible) {
+        return accessibility[i].id;
+      }
+    }
+    
+    return null;
+  }
+  

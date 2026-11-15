@@ -79,3 +79,59 @@ interface CacheEntry<T> {
       }
       return count;
     }
+
+     /**
+   * Get or set (cache-aside pattern)
+   */
+  async getOrSet<T>(
+    key: string,
+    ttlMs: number,
+    fetcher: () => Promise<T>,
+  ): Promise<T> {
+    const cached = this.get<T>(key);
+    if (cached !== null) return cached;
+
+    const data = await fetcher();
+    this.set(key, data, ttlMs);
+    return data;
+  }
+
+  /**
+   * Clear all cached data
+   */
+  clear(): void {
+    this.store.clear();
+  }
+
+  /**
+   * Get cache statistics
+   */
+  stats(): { size: number; maxSize: number } {
+    return { size: this.store.size, maxSize: this.maxSize };
+  }
+
+  private cleanup(): void {
+    const now = Date.now();
+    for (const [key, entry] of this.store.entries()) {
+      if (now > entry.expiresAt) {
+        this.store.delete(key);
+      }
+    }
+  }
+
+  private evict(): void {
+    // Remove 10% of least-hit entries
+    const entries = Array.from(this.store.entries()).sort(
+      (a, b) => a[1].hits - b[1].hits,
+    );
+
+    const toRemove = Math.max(1, Math.floor(entries.length * 0.1));
+    for (let i = 0; i < toRemove; i++) {
+      this.store.delete(entries[i][0]);
+    }
+  }
+}
+
+// ============================================================================
+// Cache TTL Presets (in milliseconds)
+// ============================================================================

@@ -135,3 +135,46 @@ interface CacheEntry<T> {
 // ============================================================================
 // Cache TTL Presets (in milliseconds)
 // ============================================================================
+
+export const CacheTTL = {
+  SHORT: 30_000, // 30 seconds - frequently changing data
+  MEDIUM: 300_000, // 5 minutes - moderately changing data
+  LONG: 1_800_000, // 30 minutes - rarely changing data
+  VERY_LONG: 3_600_000, // 1 hour - static data
+} as const;
+
+// Singleton instance
+export const cache = new MemoryCache();
+
+// ============================================================================
+// Helper: Cached database queries
+// ============================================================================
+
+export const cachedQueries = {
+  /**
+   * Get course with caching (used frequently for notification context)
+   */
+  async getCourse(courseId: string, db: any) {
+    return cache.getOrSet(`course:${courseId}`, CacheTTL.MEDIUM, async () => {
+      return db.course.findUnique({
+        where: { id: courseId },
+        select: { id: true, title: true, userId: true, imageUrl: true },
+      });
+    });
+  },
+
+  /**
+   * Get user with caching (used frequently for notification context)
+   */
+  async getUser(userId: string, db: any) {
+    return cache.getOrSet(`user:${userId}`, CacheTTL.MEDIUM, async () => {
+      return db.user.findUnique({
+        where: { id: userId },
+        select: { id: true, name: true, email: true, image: true },
+      });
+    });
+  },
+
+  /**
+   * Get enrolled student count (used for analytics)
+   */

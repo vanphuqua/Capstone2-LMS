@@ -251,7 +251,3 @@ export const AiAssistantWidget = ({ courseId }: AiAssistantWidgetProps) => {
         </DialogContent>
       </Dialog>
     </>
-  );
-};
-
-export default AiAssistantWidget;
